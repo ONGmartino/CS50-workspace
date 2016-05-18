@@ -442,6 +442,7 @@ char* htmlspecialchars(const char* s)
  * Checks, in order, whether index.php or index.html exists inside of path.
  * Returns path to first match if so, else NULL.
  */
+
 char* indexes(const char* path)
 {
     // copying various parts from function list
@@ -453,23 +454,22 @@ char* indexes(const char* path)
     // search for index.php and index.html in the directory
     struct dirent** namelist = NULL; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/dirent.h.html
     int n = scandir(path, &namelist, NULL, alphasort);    // http://pubs.opengroup.org/onlinepubs/9699919799/functions/alphasort.html
-    char* match = "index.php"
+    char* match = "index.php";
+    char* alt = "index.html";
     CHECK:for (int i = 0; i < n; i++) {
         if (strcmp(namelist[i]->d_name, match)) 
             {
                 char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
-                if (!index)
-                    return NULL;
-                index = strcpy(index, path);
-                index = strcat(index, namelist[i]->d_name);
+                if (!index) return NULL;
+                index = strcat(strcpy(index, path), namelist[i]->d_name);
                 return index;
             }
-        if (i=n-1) 
     }
-    char* match = "index.html";
-    goto CHECK;
-    
-    return NULL;
+    if (strcmp(match, alt) == 0) return NULL;
+    else {
+        match = alt;
+        goto CHECK;
+    }
 }
 
 /**
