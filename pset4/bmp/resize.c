@@ -77,8 +77,8 @@ int main(int argc, char* argv[])
 	new_bi.biHeight *= n;
 
 	// change Size in file header
-	new_bf.bfSize = 54 + ( new_bi.biWidth * sizeof(RGBTRIPLE) + outpad ) * new_bi.biHeight;
-	new_bi.biSizeImage = ( new_bi.biWidth * sizeof(RGBTRIPLE) ) * new_bi.biHeight;
+	new_bi.biSizeImage = ( new_bi.biWidth * sizeof(RGBTRIPLE) + outpad ) * abs(new_bi.biHeight);
+    new_bf.bfSize = new_bf.bfOffBits + new_bi.biSizeImage;
 
     // write outfile's BITMAP HEADER
     fwrite(&new_bf, sizeof(BITMAPFILEHEADER), 1, outptr);
