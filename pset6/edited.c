@@ -16,6 +16,9 @@
 #define LimitRequestFieldSize 4094
 #define LimitRequestLine 8190
 
+// arbitray limit to http version string length
+#define LimitVersionLength 20
+
 // number of bytes for buffers
 #define BYTES 512
 
@@ -59,6 +62,19 @@ void start(short port, const char* path);
 void stop(void);
 void transfer(const char* path, const char* type);
 char* urldecode(const char* s);
+// my prototypes
+unsigned int space_count(const char* line);
+bool method_check(const char* line);
+bool crlf_check(const char* line);
+bool request_line_is_valid(const char* line);
+void get_version_header(char* version, const char* line);
+void get_method_header(char* method, const char* line);
+void get_request_header(char* request, const char* line);
+bool validate_method_header(const char* method);
+bool validate_request_header(const char* request);
+bool validate_version_header(const char* version);
+void get_abs_path(char* abs_path, const char* request);
+void get_query(char* query, const char* request);
 
 // server's root
 char* root = NULL;
@@ -68,6 +84,10 @@ int cfd = -1, sfd = -1;
 
 // flag indicating whether control-c has been heard
 bool signaled = false;
+
+const char* valid_methods = "OPTIONS GET HEAD POST PUT DELETE TRACE CONNECT";
+const char* supported_methods[1] = {"GET"};
+const char* supported_versions[1] = {"HTTP/1.1"};
 
 int main(int argc, char* argv[])
 {
@@ -442,34 +462,43 @@ char* htmlspecialchars(const char* s)
  * Checks, in order, whether index.php or index.html exists inside of path.
  * Returns path to first match if so, else NULL.
  */
-
 char* indexes(const char* path)
 {
-    // copying various parts from function list
+    // ensure path is readable and executable
     if (access(path, R_OK | X_OK) == -1)
-        {   error(403);    return NULL;    }
+    {
+        error(403);
+        return NULL;
+    }
+    
+    // open the directory
     DIR* dir = opendir(path);
-    if (!dir) return NULL;
+    if (!dir)
+        return NULL;
     
     // search for index.php and index.html in the directory
-    struct dirent** namelist = NULL; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/dirent.h.html
-    int n = scandir(path, &namelist, NULL, alphasort);    // http://pubs.opengroup.org/onlinepubs/9699919799/functions/alphasort.html
-    char* match = "index.php";
-    char* alt = "index.html";
-    CHECK:for (int i = 0; i < n; i++) {
-        if (strcmp(namelist[i]->d_name, match)) 
-            {
-                char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
-                if (!index) return NULL;
-                index = strcat(strcpy(index, path), namelist[i]->d_name);
-                return index;
-            }
+    struct dirent** namelist = NULL;
+    int n = scandir(path, &namelist, NULL, alphasort);
+    for (int i = 0; i < n; i++) {
+        if (strcmp(namelist[i]->d_name, "index.html") == 0) {
+            char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
+            if (!index)
+                return NULL;
+            index = strcpy(index, path);
+            index = strcat(index, namelist[i]->d_name);
+            return index;
+        }
+        else if (strcmp(namelist[i]->d_name, "index.php") == 0) {
+            char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
+            if (!index)
+                return NULL;
+            index = strcpy(index, path);
+            index = strcat(index, namelist[i]->d_name);
+            return index;
+        }
     }
-    if (strcmp(match, alt) == 0) return NULL;
-    else {
-        match = alt;
-        goto CHECK;
-    }
+    
+    return NULL;
 }
 
 /**
@@ -633,11 +662,31 @@ void list(const char* path)
  */
 bool load(FILE* file, BYTE** content, size_t* length)
 {
-    if (!file) return false;
+    // ensure file is not empty
+    if (!file)
+        return false;
+        
+    /** 
+     * get the size of the file in bytes
+     * fstat does not work on file pipes; i've worked around this by arbitrarily
+     * assigning a value to length based on a reasonable pipe buffer size
+     **/
+    if ((ftell(file)) < 0)
+        *length = 4096;
+    else {
+        fseek(file, 0 , SEEK_END);
+        *length = ftell(file);
+        rewind(file); 
+    }
     
-    //TODO
-    return NULL;
-
+    char* buffer = calloc(sizeof(char) * (*length), sizeof(char));
+    if (!buffer)
+        return false;
+    
+    fread(buffer, *length, 1, file);
+    
+    *content = buffer;
+    return content ? true : false;
 }
 
 /**
@@ -645,20 +694,31 @@ bool load(FILE* file, BYTE** content, size_t* length)
  */
 const char* lookup(const char* path)
 {
-    if (path == NULL) return NULL;
-           
-    if (strstr(path, ".html") != NULL) return "text/html";    
-    else if (strstr(path, ".css") != NULL) return "text/css";
-    else if (strstr(path, ".js") != NULL) return "text/javascript";
-    else if (strstr(path, ".php") != NULL) return "text/x-php";
-
-    else if (strstr(path, ".ico") != NULL) return "image/x-icon";
-    else if (strstr(path, ".png") != NULL) return "image/png";
-    else if (strstr(path, ".jpg") != NULL) return "image/jpeg";
-    else if (strstr(path, ".gif") != NULL) return "image/gif";
-  
-    else return false;
-
+    // check that path is not null
+    if (path == NULL)
+        return NULL;
+        
+    // find position of last '.', store the dot and all remaining characters
+    char* file_type = strrchr(path, '.');
+    
+    if (strcasecmp(file_type, ".css") == 0)
+         return "text/css";
+    else if (strcasecmp(file_type, ".html") == 0)
+        return "text/html";
+    else if (strcasecmp(file_type, ".gif") == 0)
+        return "image/gif";
+    else if (strcasecmp(file_type, ".ico") == 0)
+        return "image/x-icon";
+    else if (strcasecmp(file_type, ".jpg") == 0)
+        return "image/jpeg";
+    else if (strcasecmp(file_type, ".js") == 0)
+        return "text/javascript";
+    else if (strcasecmp(file_type, ".php") == 0)
+        return "text/x-php";
+    else if (strcasecmp(file_type, ".png") == 0)
+        return "image/png";
+    else
+        return NULL;
 }
 
 /**
@@ -668,9 +728,41 @@ const char* lookup(const char* path)
  */
 bool parse(const char* line, char* abs_path, char* query)
 {
-    // TODO
-    error(501);
-    return false;
+    // lenth of request-line + null terminator
+    unsigned int line_length = strlen(line) + 1;
+    // allocate memory to store the substrings from the request-line
+    char* method = malloc(sizeof(char) * line_length);
+    char* request = malloc(sizeof(char) * line_length);
+    char* version = malloc(sizeof(char) * LimitVersionLength);
+    if (!method || !request || !version ) {
+        printf("error:failed to allocate memory\n");
+        return false;
+    }
+    
+    // ensuer line is consistant with request line format
+    if(!request_line_is_valid(line))
+        return false;
+    
+    // extract the headers from the request line
+    get_method_header(method, line);
+    get_request_header(request, line);
+    get_version_header(version, line);
+    
+    // ensure headers meet requirments
+    if (!validate_method_header(method) || 
+        !validate_request_header(request) ||
+        !validate_version_header(version))
+        return false;
+    
+    // seperate the absolute path and the query from request
+    get_abs_path(abs_path, request);
+    get_query(query, request);
+    
+    // cleanup
+    free(request);
+    free(method);
+    free(version);
+    return true;
 }
 
 /**
@@ -1028,7 +1120,7 @@ void transfer(const char* path, const char* type)
 
 /**
  * URL-decodes string, returning dynamically allocated memory for decoded string
- * that must be deallocated by caller.
+ * that must be deallocated by caller
  */
 char* urldecode(const char* s)
 {
@@ -1070,4 +1162,145 @@ char* urldecode(const char* s)
 
     // escaped string
     return t;
+}
+
+ // My functions!
+ 
+/**
+ * seperate the query from the request. the start of the query is indicated by '?'
+ * and is terminated by a ' '.
+ */
+void get_query(char* query, const char* request) {
+    if (strchr(request, '?')) {
+        strcpy(query, strchr(request, '?') + 1);
+        query[strlen(query) / sizeof(query[0])] = '\0';
+    }
+    else
+        query[0] = '\0';
+}
+ 
+/**
+ * seperate the absolute path from the request. absolute path is assumed to contain
+ * no '?'. '?' seperates the absolute path from the query.
+ */
+void get_abs_path(char* abs_path, const char* request) {
+    strcpy(abs_path, request);
+    if (strchr(abs_path, '?'))
+        strchr(abs_path, '?')[0] = '\0';
+    else
+        abs_path[strlen(abs_path) / sizeof(abs_path[0])] = '\0';
+}
+ 
+bool validate_version_header(const char* version) {
+    size_t supported_versions_size = sizeof(supported_versions) / sizeof(supported_versions[0]);
+    for (int i = 0; i < supported_versions_size; i++)
+        if (strcmp(version, supported_versions[i]) == 0)
+            return true;
+            
+    error(505);
+    return false;
+}
+
+ 
+bool validate_request_header(const char* request) {
+    // ensure request begins with '/'
+    if (request[0] != '/') {
+        error(501);
+        return false;
+    }
+    // ensure request does not contain '"'
+    else if (strchr(request, '\"')) {
+        error(400);
+        return false;
+    }
+    else
+        return true;
+}
+
+ 
+// compare method-header to allowed methods
+bool validate_method_header(const char* method) {
+    size_t valid_methods_size = sizeof(supported_methods) / sizeof(supported_methods[0]);
+    for (int i = 0; i < valid_methods_size; i++)
+        if (strcmp(method, supported_methods[i]) == 0)
+            return true;
+            
+    error(405);
+    return false;
+}
+ 
+ /**
+  * copies the version-header from a request-line. version header is preceded
+  * by the last occurance of a space and terminated by CRLF.
+  */
+ void get_version_header(char* version, const char* line) {
+    strcpy(version, strrchr(line, ' ') + 1);
+    strstr(version, "\r\n")[0] = '\0';
+}
+
+/**
+ * copies the request-header from a request-line. request-header is preceded 
+ * and terminated by the last occurance of a space.
+ */
+void get_request_header(char* request, const char* line) {
+    strcpy(request, strchr(line, ' ') + 1);
+    strrchr(request, ' ')[0] = '\0';
+}
+
+/**
+ *  copies the method-header from a request-line. method-header is at the beginning
+ *  of a request-line and is terminated by a space.
+ */
+void get_method_header(char* token, const char* line) {
+    strcpy(token, line);
+    strchr(token, ' ')[0] = '\0';
+}
+
+// count the numbers of spaces in a string
+unsigned int space_count(const char* line) {
+    unsigned int count = 0;
+    for (int i = 0, length = strlen(line); i < length; i++)
+        if (line[i] == ' ')
+            count++;
+    return count;
+}
+
+/**
+ * checks if a method token is valid(ie. request line begins with the method token
+ * the token is a valid type). 
+ */
+bool method_check(const char* line) {
+    bool found = false;
+    char* token = malloc(sizeof(char) * strlen(line) + 1);
+    
+    get_method_header(token, line);
+        
+    // search for the token in a string containing possible valid tokens
+    if (strstr(valid_methods, token) != NULL)
+        found = true;
+        
+    free(token);
+    return found;
+}
+
+/** 
+ * check if CRLF is followed by null terminator, indicating that CRLF 
+ * is at the end of the request-line
+ */
+bool crlf_check(const char* line) {
+    if ((strstr(line, "\r\n") + strlen("\r\n"))[0] == '\0')
+        return true;
+    return false;
+}
+
+// validate the request-line
+bool request_line_is_valid(const char* line) {
+    if (crlf_check(line) == false)
+        return false;
+    else if (space_count(line) != 2)
+        return false;
+    else if (method_check(line) == false)
+        return false;
+    else
+        return true;
 }
