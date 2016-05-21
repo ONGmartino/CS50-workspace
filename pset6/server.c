@@ -635,9 +635,19 @@ bool load(FILE* file, BYTE** content, size_t* length)
 {
     if (!file) return false;
     
-    //TODO
-    return NULL;
-
+    // coming from cplusplus.com/reference/cstdio/ftell
+    fseek (file, 0, SEEK_END);
+    *length = ftell(file);
+    
+    //rewind(file); //check if necessary
+    
+    //cplusplus.com/reference/cstdio/
+    char* buffer = malloc(sizeof(char) * (*length));
+        if (buffer != NULL) return false;
+    fread(buffer, *length, 1, file);
+        if (!content) return false;
+    *content = buffer;
+    return true;
 }
 
 /**
