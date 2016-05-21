@@ -639,11 +639,11 @@ bool load(FILE* file, BYTE** content, size_t* length)
     fseek (file, 0, SEEK_END);
     *length = ftell(file);
     
-    //rewind(file); //check if necessary
+    rewind(file); //check if necessary
     
     //cplusplus.com/reference/cstdio/
     char* buffer = malloc(sizeof(char) * (*length));
-        if (buffer != NULL) return false;
+        if (!buffer) return false;
     fread(buffer, *length, 1, file);
         if (!content) return false;
     *content = buffer;
@@ -678,9 +678,29 @@ const char* lookup(const char* path)
  */
 bool parse(const char* line, char* abs_path, char* query)
 {
-    // TODO
-    error(501);
-    return false;
+    char* request = malloc(sizeof(char) * (strlen(line)+1));
+    //check line 
+
+    //get request from line
+    strcpy(request, strchr(line, ' ') + 1);
+    strrchr(request, ' ')[0] = '\0';
+    
+    //check req per 
+    if (request[0] != '/' || strchr(request, '\"')) return false;    
+    
+    //in base a req dai abs path 
+    strcpy(abs_path, request);
+    if (strchr(abs_path, '?')) strchr(abs_path, '?')[0] = '\0';
+    else abs_path[strlen(abs_path) / sizeof(abs_path[0])] = '\0';
+    
+    if (strchr(request, '?')) {
+        strcpy(query, strchr(request, '?') + 1);
+        query[strlen(query) / sizeof(query[0])] = '\0';
+    }
+    else query[0] = '\0';
+    
+    free(request);
+    return true;
 }
 
 /**
