@@ -675,13 +675,6 @@ const char* lookup(const char* path)
  */
 bool parse(const char* line, char* abs_path, char* query)
 {
-  #include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-
-bool parse(const char* line, char* abs_path, char* query)
-{
     // allocate method, request, version
     
     char* method = malloc(sizeof(char) * (strlen(line)+1));
@@ -757,7 +750,6 @@ bool parse(const char* line, char* abs_path, char* query)
     free(method);
     free(version);
     return true;
-}
 }
 
 /**
