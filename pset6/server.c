@@ -450,22 +450,29 @@ char* indexes(const char* path)
         {   error(403);    return NULL;    }
     DIR* dir = opendir(path);
     if (!dir) return NULL;
-    int check = 0;
     // search for index.php and index.html in the directory
     struct dirent** namelist = NULL; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/dirent.h.html
     int n = scandir(path, &namelist, NULL, alphasort);    // http://pubs.opengroup.org/onlinepubs/9699919799/functions/alphasort.html
     char* match = "index.php";
     char* alt = "index.html";
-    FOR:for (int i = 0; i < n; i++) {
+
+    for (int i = 0; i < n; i++) {
         if (strcmp(namelist[i]->d_name, match) == 0) {
                 char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
                 if (!index) return NULL;
                 index = strcat(strcpy(index, path), namelist[i]->d_name);
-                check = 1;
                 return index;
         }
     }
-    if (check == 1) { match = alt; goto FOR;}
+    for (int i = 0; i < n; i++) {
+        if (strcmp(namelist[i]->d_name, alt) == 0) {
+                char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
+                if (!index) return NULL;
+                index = strcat(strcpy(index, path), namelist[i]->d_name);
+                return index;
+        }
+    }
+
     return NULL;
 }
 
