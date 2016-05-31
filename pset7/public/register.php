@@ -25,11 +25,9 @@
                  $rows = CS50::query("SELECT LAST_INSERT_ID() AS id");
                  $id = $rows[0]["id"];      
                  $_SESSION["id"] = $id;
-                 header('Loca')         
+                 header('Location: index.php');        
             }
         }
-         
-        // TODO
     }
 
 ?>
