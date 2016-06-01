@@ -12,7 +12,7 @@
         <div class="form-group">
             <button class="btn btn-default" type="submit">
                 <span aria-hidden="true" class="glyphicon glyphicon-log-in"></span>
-                Log In
+                Register now! 
             </button>
         </div>
     </fieldset>

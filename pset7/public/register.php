@@ -20,7 +20,7 @@
         else{
             $ins = CS50::query("INSERT IGNORE INTO users (username, hash, cash) VALUES(?, ?, 10000.0000)",
                                 $_POST["username"], password_hash($_POST["password"], PASSWORD_DEFAULT));
-            if ($ins == false) apologize ("DB error. Please, try a different username")
+            if ($ins == false) apologize ("DB error. Please, try a different username");
             else {
                  $rows = CS50::query("SELECT LAST_INSERT_ID() AS id");
                  $id = $rows[0]["id"];      
