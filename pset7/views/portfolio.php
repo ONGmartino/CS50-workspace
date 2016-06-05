@@ -1,12 +1,12 @@
 <div>
-    <table class="table table-striped">
+    <table class="table table-hover">
         <thead>
             <tr>
-                <th>Symbol</th>
-                <th>Name</th>
-                <th>Shares</th>
-                <th>Price</th>
-                <th>Value</th>
+                <th class="text-center">Symbol</th>
+                <th class="text-center">Name</th>
+                <th class="text-center">Shares</th>
+                <th class="text-center">Price</th>
+                <th class="text-center">Value</th>
             </tr>
         </thead>
         <tbody>
@@ -19,9 +19,9 @@
                     <td><?= number_format($position["value"],2) ?></td>
                 </tr>
             <?php endforeach ?>
-            <tr>
-                <td colspan="4" >CASH</td>
-                <td><?= "$".$cash ?> </td>
+            <tr class="info">
+                <td colspan="3">CASH</td>
+                <td colspan="3"> <?= "$".$cash ?> </td>
             </tr>
         </tbody>
     </table>
