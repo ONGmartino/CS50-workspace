@@ -22,9 +22,7 @@
                                 $_POST["username"], password_hash($_POST["password"], PASSWORD_DEFAULT));
             if ($ins == false) apologize ("DB error. Please, try a different username");
             else {
-                 $rows = CS50::query("SELECT LAST_INSERT_ID() AS id");
-                 $id = $rows[0]["id"];      
-                 $_SESSION["id"] = $id;
+                 $_SESSION["id"] = CS50::query("SELECT LAST_INSERT_ID() AS id")[0]["id"];
                  header('Location: index.php');        
             }
         }
