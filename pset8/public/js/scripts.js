@@ -72,9 +72,30 @@ $(function() {
 /**
  * Adds marker for place to map.
  */
-function addMarker(place)
-{
-    // TODO
+function addMarker(place){
+        //could work
+    var marker = new MarkerWithLabel({
+    	icon: "img/icon.png",
+    	position: new google.maps.LatLng(place.latitude, place.longitude),
+    	map: map,
+    	labelContent: place.place_name + ', '+place.admin_name1 + ', ',
+    	labelAnchor: new google.maps.Point(-18, 24),			 
+    })
+    
+    google.maps.event.addListener(marker, "click", function() {
+    	$.getJSON("articles.php", "geo="+place["postal_code"])
+    		.done(
+    			function(data, textStatus, jqXHR){
+    				if (data.length == 0) showInfo(marker, 'Nothing to show.');
+    				else{
+    				    var html = "<ul>";
+    					for(key in data) html += "<li><a href='"+data[key].link+"' target='_blank'>"+data[key].title+"</a></li>";
+    					html += "</ul>";
+    					showInfo(marker,html);
+    				}
+    			}
+    		)
+    })
 }
 
 /**
@@ -157,9 +178,10 @@ function hideInfo()
 /**
  * Removes markers from map.
  */
-function removeMarkers()
-{
-    // TODO
+function removeMarkers(){ 
+    // remove marker from markers 
+    for(k in markers)	markers[k].setMap(null); 
+
 }
 
 /**
