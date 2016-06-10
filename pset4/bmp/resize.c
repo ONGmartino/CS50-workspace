@@ -104,10 +104,8 @@ int main(int argc, char* argv[])
 		        fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
 
 		        // write RGB 
-
-				for (int linecopy = 0; linecopy < n; linecopy++){
+				for (int linecopy = 0; linecopy < n; linecopy++)
 				        fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
-					}
 		    }
 
 		    // skip over padding, if any

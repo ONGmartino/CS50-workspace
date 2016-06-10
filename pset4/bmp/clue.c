@@ -81,15 +81,16 @@ int main(int argc, char* argv[])
             // read RGB triple from infile
             fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
 
-	//write
-	if (triple.rgbtRed == 255){
-		triple.rgbtRed = 255;
-		triple.rgbtBlue = 255;
-		triple.rgbtGreen = 255;
+        	// if a pure-red pixel, shift it to white
+        	if (triple.rgbtRed == 255){
+        		triple.rgbtRed = 255;
+        		triple.rgbtBlue = 255;
+        		triple.rgbtGreen = 255;
+                }
+            
+            // then write to disk
+        	fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
         }
-
-	fwrite(&triple, sizeof(RGBTRIPLE), 1, outptr);
-}
         // skip over padding, if any
         fseek(inptr, padding, SEEK_CUR);
 
