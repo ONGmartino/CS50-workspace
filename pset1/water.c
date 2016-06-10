@@ -2,8 +2,12 @@
 #include <cs50.h>
 
 int main (void){
-	int min;
-	printf("minutes: ");
-    min = GetInt();
-	printf("bottles: %i", (min*12));
+
+	int min; // var initialization
+
+	printf("minutes: "); // ask user for input
+
+    min = GetInt(); // recive input
+
+	printf("bottles: %i", (min*12)); // output
 }
