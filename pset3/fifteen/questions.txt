@@ -3,7 +3,8 @@ questions.txt
 Computer Science 50
 Problem Set 3
 
-0. TODO
-1. TODO
-2. TODO
-3. TODO
+
+0. From 3x3 to 9x9, as in DIM_MIN and DIM_MAX
+1. 2-dimensional array (an array for every element in an 'upper' array), that is simply a matrix
+2. A function with a very creative name, greet(), specified in line 149
+3. init, draw, move, won

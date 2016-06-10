@@ -159,17 +159,18 @@ void greet(void)
  */
 void init(void)
 {
+    // init the maximum value
 	int tab = (d*d)-1;
-	printf("%i", tab);
-	for(int row = 0; row < d; row++){
-		for(int col = 0; col < d; col++, tab--){
+	
+	// for every row, for every column, place a decrescent value
+	for(int row = 0; row < d; row++)
+		for(int col = 0; col < d; col++, tab--)
 			board[row][col] = tab;
-			}	
-	board[d-1][d-1]= 0;
+	
+    // if even dimension, switch the last 2 values to ensure possible solution
 	if (d%2 == 0){
 		board[d-1][d-3] = 1;
 		board[d-1][d-2] = 2;
-		}
 	}
 }
 
@@ -177,30 +178,37 @@ void init(void)
  * Prints the board in its current state.
  */
 void draw(void){
+    
+    // separate the board from the left and type the upper edge
 	printf("\n\n\n");
-	for (int i = 0; i < d; i++){
+	for (int i = 0; i < d; i++)
 		printf("-----");
-	}
 	printf("-\n");
+	
+	// per line, type each line ensuring readability 
 	for(int row = 0; row < d; row++){
 		printf("|");
+		
 		for(int col = 0; col < d; col++){
-			if (board[row][col] == 0){
-				printf("  %c |", board[row][col]);
-				}
-			else if (board[row][col]<10){
+		    
+			if (board[row][col] == 0)
+				printf("    |");
+				
+			else if (board[row][col]<10)
 				printf("  %i |", board[row][col]);
-			}
-			else{
+			
+			else
 				printf(" %i |", board[row][col]);
-			}
+			
 		}
+		
+	    //end the line and type a separator
+	    
 		printf("\n");
-		for (int i = 0; i < d; i++){
+		for (int i = 0; i < d; i++)
 			printf("-----");
-			}
 		printf("-\n");
-		}
+	}
 	printf("\n\n\n\n");
 }
 
@@ -208,11 +216,17 @@ void draw(void){
  * If tile borders empty space, moves tile and returns true, else
  * returns false. 
  */
-bool move(int tile)
-{
+bool move(int tile){
+    
+    // I tried, but this is the best stylistic form I came up with that <i>works</i>
+    
+    // Iterate through the board, when you find the item suggested:
+    // look at every side permitted (not over the edge) and swap the element with the zero
+    
 	for (int row = 0; row < d; row++ ){
 		for (int col = 0; col < d; col++){
-			if (board[row][col] == tile){
+		    if (board[row][col] == tile){
+			
 				if (board[row][col+1] == 0 && (col+1) < d){
 					board[row][col] = 0;
 					board[row][col+1] = tile;
@@ -236,6 +250,8 @@ bool move(int tile)
 			}
 		}
 	}
+	
+	// if there is no zero neighbours, move not permitted
 	return false;
 }
 
@@ -246,16 +262,23 @@ bool move(int tile)
 bool won(void)
 {
 	int check = 1;
+
+    // iterate through the board, for each position, compare with an increasing int (check)
+    // the first value that doesn't match, return false (aka TRY AGAIN)
+	
 	for(int row = 0; row < d; row++){
-		for(int col = 0; col < d; col++, check++){
-            if(board[row][col] == 0 && check == (d*d)){
+		for(int col = 0; col < d; col++, check++)
+		{
+            if(board[row][col] == 0 && check == (d*d))
                 return true;
-            }
-            if(board[row][col] != 0 && board[row][col] != check){
+            
+            if(board[row][col] != 0 && board[row][col] != check)
                 return false;
-            }
 		}
 	}
+	
+	// logically, the next line is not required. However, Clang told me that
+	// "control may reach end of non-void function". 
 	return false;
 }
 
