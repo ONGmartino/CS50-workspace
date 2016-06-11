@@ -73,7 +73,7 @@ $(function() {
  * Adds marker for place to map.
  */
 function addMarker(place){
-        //could work
+    // init the marker
     var marker = new MarkerWithLabel({
     	icon: "img/icon.png",
     	position: new google.maps.LatLng(place.latitude, place.longitude),
@@ -83,11 +83,16 @@ function addMarker(place){
     })
     
     google.maps.event.addListener(marker, "click", function() {
+        // start reading the JSON
     	$.getJSON("articles.php", "geo="+place["postal_code"])
+
+            // if ok, and there's some news in it 
     		.done(
     			function(data, textStatus, jqXHR){
     				if (data.length == 0) showInfo(marker, 'Nothing to show.');
     				else{
+
+                        // write the unordered list and pass it.
     				    var html = "<ul>";
     					for(key in data) html += "<li><a href='"+data[key].link+"' target='_blank'>"+data[key].title+"</a></li>";
     					html += "</ul>";
@@ -179,9 +184,8 @@ function hideInfo()
  * Removes markers from map.
  */
 function removeMarkers(){ 
-    // remove marker from markers 
-    for(k in markers)	markers[k].setMap(null); 
-
+    // easy peasy
+    for(k in markers) markers[k].setMap(null); 
 }
 
 /**

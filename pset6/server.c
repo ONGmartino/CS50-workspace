@@ -445,29 +445,40 @@ char* htmlspecialchars(const char* s)
 
 char* indexes(const char* path)
 {
-    // copying various parts from function list
+    // copying various parts from function list, to check the path
     if (access(path, R_OK | X_OK) == -1)
-        {   error(403);    return NULL;    }
+        {
+            error(403);
+            return NULL;
+        }
     DIR* dir = opendir(path);
     if (!dir) return NULL;
+
     // search for index.php and index.html in the directory
-    struct dirent** namelist = NULL; // http://pubs.opengroup.org/onlinepubs/007908775/xsh/dirent.h.html
-    int n = scandir(path, &namelist, NULL, alphasort);    // http://pubs.opengroup.org/onlinepubs/9699919799/functions/alphasort.html
+    // tnks to http://pubs.opengroup.org/onlinepubs/007908775/xsh/dirent.h.html
+    struct dirent** namelist = NULL;
+    // and http://pubs.opengroup.org/onlinepubs/9699919799/functions/alphasort.html
+    int n = scandir(path, &namelist, NULL, alphasort);   
     char* match = "index.php";
     char* alt = "index.html";
 
+    // for any element in the path, compare it with index.php
     for (int i = 0; i < n; i++) {
         if (strcmp(namelist[i]->d_name, match) == 0) {
+
+                // than return the position of the index
                 char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
-                if (!index) return NULL;
+                    if (!index) return NULL;
                 index = strcat(strcpy(index, path), namelist[i]->d_name);
                 return index;
         }
     }
+
+    // repeat for the html index.
     for (int i = 0; i < n; i++) {
         if (strcmp(namelist[i]->d_name, alt) == 0) {
                 char* index = malloc(sizeof(char) * (strlen(path) + strlen(namelist[i]->d_name) + 1));
-                if (!index) return NULL;
+                    if (!index) return NULL;
                 index = strcat(strcpy(index, path), namelist[i]->d_name);
                 return index;
         }
@@ -637,9 +648,10 @@ void list(const char* path)
  */
 bool load(FILE* file, BYTE** content, size_t* length)
 {
+    // sanity check
     if (!file) return false;
     
-    // coming from cplusplus.com/reference/cstdio/ftell
+    // from cplusplus.com/reference/cstdio/ftell fseek and rewind
     if ((ftell(file)) < 0)
         *length = 4096;
     else {
@@ -647,7 +659,8 @@ bool load(FILE* file, BYTE** content, size_t* length)
         *length = ftell(file);
         rewind(file); 
     } 
-    //cplusplus.com/reference/cstdio/
+
+    // and again, create a buffer, store the file in it, if any return the buffer as CONTENT
     char* buffer = calloc(sizeof(char) * (*length), sizeof(char));
         if (!buffer) return false;
     fread(buffer, *length, 1, file);
@@ -663,6 +676,7 @@ const char* lookup(const char* path)
 {
     if (path == NULL) return NULL;
            
+    // sorry for the ctrl-c-v but swith doesn't work with text.
     if (strstr(path, ".html") != NULL) return "text/html";    
     else if (strstr(path, ".css") != NULL) return "text/css";
     else if (strstr(path, ".js") != NULL) return "text/javascript";
@@ -685,7 +699,6 @@ const char* lookup(const char* path)
 bool parse(const char* line, char* abs_path, char* query)
 {
     // allocate method, request, version
-    
     char* method = malloc(sizeof(char) * (strlen(line)+1));
     char* request = malloc(sizeof(char) * (strlen(line)+1));
     char* version = malloc(sizeof(char) * 20);
@@ -693,60 +706,53 @@ bool parse(const char* line, char* abs_path, char* query)
     
     //request_line_is_valid
 
-        //crlf_check
+        // crlf check
         if ((strstr(line, "\r\n") + strlen("\r\n"))[0] != '\0') return false;
   
-        // space_count
+        // space count, for correctness
         unsigned int count = 0;
         for (int i = 0, length = strlen(line); i < length; i++)
             if (line[i] == ' ') count++;
         if (count != 2) return false;
 
-        //method_check
+        // method check
         char* token = malloc(sizeof(char) * strlen(line) + 1);
-
-            //get_method_header
-            strcpy(token, line);
-            strchr(token, ' ')[0] = '\0';
-
+        strcpy(token, line);
+        strchr(token, ' ')[0] = '\0';
         const char* valid_methods = "OPTIONS GET HEAD POST PUT DELETE TRACE CONNECT";
         if (strstr(valid_methods, token) == NULL) return false;
         free(token);
         
     // extract the headers from the request line
     
-        //get_method_header
+        // get method, request and version header
         strcpy(method, line);
         strchr(method, ' ')[0] = '\0';
     
-        //get_request_header
         strcpy(request, strchr(line, ' ') + 1);
         strrchr(request, ' ')[0] = '\0';  
     
-        //get_version_header
         strcpy(version, strrchr(line, ' ') + 1);
         strstr(version, "\r\n")[0] = '\0';
     
     // ensure headers meet requirments
     
-        //validate_version_header
+        // validate header version,, method and request 
         if (strcmp(version, "HTTP/1.1") != 0) {error(505); return false;}
 
-        //validate_method_header
         if (strcmp(method, "GET") != 0) {error(405); return false;}
 
-        //validate_request_header
         if (request[0] != '/') {error(501);return false;}
         if (strchr(request, '\"')) {error(400);return false;}
     
     // seperate the absolute path and the query from request
 
-        //get_abs_path
+        // the abs path part
         strcpy(abs_path, request);
         if (strchr(abs_path, '?')) strchr(abs_path, '?')[0] = '\0';
         else abs_path[strlen(abs_path) / sizeof(abs_path[0])] = '\0';
     
-        //get_query
+        // and the questy part
         if (strchr(request, '?')) 
         {
             strcpy(query, strchr(request, '?') + 1);
@@ -754,7 +760,7 @@ bool parse(const char* line, char* abs_path, char* query)
         }
         else query[0] = '\0';
     
-    // cleanup
+    // safe goodbye
     free(request);
     free(method);
     free(version);

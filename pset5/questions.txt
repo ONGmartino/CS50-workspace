@@ -1,11 +1,11 @@
-0.  TODO
-1.  TODO
-2.  TODO
-3.  TODO
-4.  TODO
-5.  TODO
-6.  TODO
-7.  TODO
-8.  TODO
-9.  TODO
-10. TODO
+0.  what is pneumonoultramicroscopicsilicovolcanoconiosis
+1.  getrusage man, what do
+2.  how many members are in avariable of type getrusage
+3.  why before and after passed by reference to calculate?
+4.  how main goes reading words? how the for loop works?
+5.  why fgetc instead of fscanf
+6.  why declared params of check load as const?
+7.  which data structure?  what's inside?
+8.  how slow was your code the first time?
+9.  which changes to improve
+10. bottleneck

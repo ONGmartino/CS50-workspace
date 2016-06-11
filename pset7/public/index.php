@@ -3,10 +3,11 @@
     // configuration
     require("../includes/config.php"); 
 
-    // render portfolio
+    // query for the portfolio
     $rows = cs50::query("SELECT symbol,shares FROM portfolios WHERE id = ?",$_SESSION["id"]);
-
     $positions = [];
+
+    // for each title, show the current price 
     foreach ($rows as $row)
     {
         $stock = lookup($row["symbol"]);
@@ -21,12 +22,11 @@
             ];
         }
     }
-   
+    
+    // and the avaliable wallet
     $cash = number_format(cs50::query("SELECT cash FROM users WHERE id = ?",$_SESSION["id"])[0]["cash"],2);
 
+    // then finally rended
     render("portfolio.php", ["title" => "Portfolio", "positions" => $positions, "cash" => $cash]);
-
 ?>
 
-<!-- portfolios: id (session id), symbol, name (stock), price, shares
-cash from users table -->
