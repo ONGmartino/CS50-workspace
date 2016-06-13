@@ -4,6 +4,7 @@
 #include <string.h>
 #include <cs50.h>
 
+// function prototype
 bool checksignature(uint8_t check[4]);
 
 int main(void)
