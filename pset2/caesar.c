@@ -20,17 +20,14 @@ int main (int argc, string argv[]){
 	// by subracting the base ASCII number, add the index in a rotation fashion, then re-add the ASCII base value
 	for (int i = 0; i < l; i++){
 		
-		if (s[i] > 96 && s[i] <123){
+		if (s[i] > 96 && s[i] <123)
 			printf("%c", ((s[i] - 97 + k) % 26) + 97);
-		}
 		
-		else if (s[i]>64 && s[i]<91){
+		else if (s[i]>64 && s[i]<91)
 			printf("%c", ((s[i] - 65 + k) % 26) + 65);
-		}
 		
-		else{
+		else
 			printf("%c", s[i]);
-		}
 	} 
 	
 	// lastly, output.
