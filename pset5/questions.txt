@@ -1,11 +1,12 @@
-0.  what is pneumonoultramicroscopicsilicovolcanoconiosis
-1.  getrusage man, what do
-2.  how many members are in avariable of type getrusage
-3.  why before and after passed by reference to calculate?
-4.  how main goes reading words? how the for loop works?
-5.  why fgetc instead of fscanf
-6.  why declared params of check load as const?
-7.  which data structure?  what's inside?
-8.  how slow was your code the first time?
-9.  which changes to improve
-10. bottleneck
+0. The Oxford English dictionary says it's an artificial long word said to mean a lung disease, caused by inhaling very fine ash and sand dust. Wiki also acknowledge it as silicosis, in a more human-friendly fashion.
+1.  GetRUsage 'returns resource usage measures', a function/command which I can ask to for having meaningful info about which resource my program is particularly using, and in which amount. 
+2.  According to the man pages, the struct RUsage includes 2 timeval structs and 14 different long, for 16 total variables.
+3.  Because of the implementation of calculate as a separate function, passing before and after by value will make a copy of them, instead of simply passing the pointers. Could be that, with a performance objective, the staff would make even this function as fast as they can. If so, as a collateral benefit, the function has to pass 2 pointers instead of 4 variables. However, I’m not so sure. 
+4. For any char in the input file, do the following: if the char is a valid char (not numbers) or the termination char, append it to the word and increment the index. Contemporary, get some protection against some flaw in the input file, and reject numeric entries. If the index is positive, and the current index of the word is a nice ‘\0’, update the counter, check it with the student’s function. If so, print it out. Then, reset the index counter and start again with a new char.
+5.  First because it is more appropriate form for the elaboration we're doing: we're processing chars one by one, so we're asking chars one by one. Secondly, fscanf will require additional instruction on how to handle the received strings, making the code more complex, unreadable and....ugly.
+6.  Const is a type qualifier that set the variable as ‘read only’. In this context, it can be used to avoid any strange modification from a third-party, like us, and protect the original variable. Again, this can exclude the opportunity for any unknown cheat.
+7.  I used a tries, starting with a root node that include an array of 26 pointers (one for each letter) and a boolean value that act as a flag to show if the word could end there. When the load function find a new char, it allocates a new node and restart the process in the new array. When the function find a \0, it change the end flag to true. The alternative is to use a node of two array, one of pointers and one of possible ending characters, I choose the other because of an impression of which could use the minimum ram and to keep the algorithm as simple as I can.
+8.  The first version that actually worked was twice as slower than the staff implementation in the load and unload function, and perform the same time (according to the runtime expressed, at least) in the check function. 
+9.  Actually, I try to malloc the node in a faster way, without setting it to safe variables (null and false, respectively). After some hours, I gave up, so the performance is the same of the first working version.
+10. I believe that the slower perform is due to the array+bool struct, as it require a single loop for the terminate char itself; this loop can be avoided by using a double array struct, along with some instruction that can be avoided or incorporated in a faster way
+
