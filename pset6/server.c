@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <ctype.h>
 
 // types
 typedef char BYTE;
@@ -674,18 +675,24 @@ bool load(FILE* file, BYTE** content, size_t* length)
  */
 const char* lookup(const char* path)
 {
+    // check path, then copy it to a lowercase string
+    
     if (path == NULL) return NULL;
+    
+    char lower[strlen(path)];
+    for (int i = 0; i < strlen(path); i++)
+        lower[i] = tolower(path[i]);
            
     // sorry for the ctrl-c-v but swith doesn't work with text.
-    if (strstr(path, ".html") != NULL) return "text/html";    
-    else if (strstr(path, ".css") != NULL) return "text/css";
-    else if (strstr(path, ".js") != NULL) return "text/javascript";
-    else if (strstr(path, ".php") != NULL) return "text/x-php";
+    if (strstr(lower, ".html") != NULL) return "text/html";    
+    else if (strstr(lower, ".css") != NULL) return "text/css";
+    else if (strstr(lower, ".js") != NULL) return "text/javascript";
+    else if (strstr(lower, ".php") != NULL) return "text/x-php";
 
-    else if (strstr(path, ".ico") != NULL) return "image/x-icon";
-    else if (strstr(path, ".png") != NULL) return "image/png";
-    else if (strstr(path, ".jpg") != NULL) return "image/jpeg";
-    else if (strstr(path, ".gif") != NULL) return "image/gif";
+    else if (strstr(lower, ".ico") != NULL) return "image/x-icon";
+    else if (strstr(lower, ".png") != NULL) return "image/png";
+    else if (strstr(lower, ".jpg") != NULL) return "image/jpeg";
+    else if (strstr(lower, ".gif") != NULL) return "image/gif";
   
     else return false;
 
@@ -704,24 +711,24 @@ bool parse(const char* line, char* abs_path, char* query)
     char* version = malloc(sizeof(char) * 20);
         if (!method || !request || !version ) return false;
     
-    //request_line_is_valid
+    // request_line_is_valid
 
         // crlf check
         if ((strstr(line, "\r\n") + strlen("\r\n"))[0] != '\0') return false;
   
-        // space count, for correctness
+        // space count, for correctness of request
         unsigned int count = 0;
         for (int i = 0, length = strlen(line); i < length; i++)
             if (line[i] == ' ') count++;
-        if (count != 2) return false;
+        if (count != 2) error(400);
 
         // method check
-        char* token = malloc(sizeof(char) * strlen(line) + 1);
-        strcpy(token, line);
-        strchr(token, ' ')[0] = '\0';
-        const char* valid_methods = "OPTIONS GET HEAD POST PUT DELETE TRACE CONNECT";
-        if (strstr(valid_methods, token) == NULL) return false;
-        free(token);
+        //char* token = malloc(sizeof(char) * strlen(line) + 1);
+        //strcpy(token, line);
+        //strchr(token, ' ')[0] = '\0';
+        //const char* valid_methods = "OPTIONS GET HEAD POST PUT DELETE TRACE CONNECT";
+        //if (strstr(valid_methods, token) == NULL) return false;
+        //free(token);
         
     // extract the headers from the request line
     
@@ -740,6 +747,7 @@ bool parse(const char* line, char* abs_path, char* query)
         // validate header version,, method and request 
         if (strcmp(version, "HTTP/1.1") != 0) {error(505); return false;}
 
+        if (strlen(method) != 3) {error(405); return false;}
         if (strcmp(method, "GET") != 0) {error(405); return false;}
 
         if (request[0] != '/') {error(501);return false;}
