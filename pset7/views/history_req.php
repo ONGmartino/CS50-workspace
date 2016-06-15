@@ -19,7 +19,8 @@
             </tr>
             <?php foreach ($hists as $his): ?>
                 <tr <?php if ($his["type"] === "b") echo "class=\"success\""; 
-                            else echo "class=\"danger\"" ?> >
+                          else if ($his["type"] === "s") echo "class=\"danger\"" 
+                          else echo "class=\"info\"" ?> >
                     <td><?php if($his["type"] === "b") echo "Buy"; else echo "Sell" ?></td>
                     <td><?= $his["date"] ?></td>
                     <td><?= strtoupper($his["symbol"]) ?></td>
