@@ -7,7 +7,7 @@
             <input class="form-control" name="quantity" placeholder="Credit card number" type="number"/>
         </div>
 		<div class="control-group">
-            <input class="form-control" type="submit" value="Sell now!"/>
+            <input class="form-control" type="submit" value="Deposit!"/>
         </div>
     </fieldset>
 </form>

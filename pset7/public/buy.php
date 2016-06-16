@@ -6,8 +6,13 @@
     // if the form has been submitted
     if ($_SERVER["REQUEST_METHOD"] == "POST")
     {
-        //find if allowed and new price
+        // sanity check
+        if ($_POST["symbol"] == NULL) apologize ("Enter a valid symbol");
         $tmp = lookup($_POST["symbol"]);
+        if ($tmp["price"] == NULL) apologize ("Enter a valid symbol");
+        if ($_POST["quantity"] == NULL) apologize ("Enter a quantity");
+        
+        //find if allowed and new price
         $coverage = cs50::query("SELECT * from users WHERE id=?", $_SESSION["id"])[0]["cash"];
 
         if (($_POST["quantity"] * $tmp["price"]) > $coverage) 

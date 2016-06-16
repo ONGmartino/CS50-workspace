@@ -6,6 +6,10 @@
     // if the form has been submitted
     if ($_SERVER["REQUEST_METHOD"] == "POST")
     {
+        // sanity check
+        if ($_POST["symbol"] == NULL) apologize ("Select a symbol");
+        if ($_POST["quantity"] == NULL) apologize ("Enter a quantity");
+        
         //find if allowed and new price
         $coverage = cs50::query("SELECT * from portfolios WHERE id=? AND symbol=?",
                     $_SESSION["id"],$_POST["symbol"])[0]["shares"];
