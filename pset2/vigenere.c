@@ -21,7 +21,8 @@ int main (int argc, string argv[]){
 			printf("Bad passphrase, retry\n");
 			return 1;
 		}
-		if (isupper(argv[1][i])) argv[1][i] = tolower(argv[1][i]);
+		if (isupper(argv[1][i])) 
+			argv[1][i] = tolower(argv[1][i]);
 	}
 	
 	// var init and ask for CLI input to convert 
